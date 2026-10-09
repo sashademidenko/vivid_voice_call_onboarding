@@ -126,8 +126,40 @@ python3 scripts/mock-call.py
 …
 ```
 
-Type `/end` to hang up. Each reply takes about 2–6 seconds. Requests for help land in
+Type `/end` to hang up, or `/hangup` to play a customer who hangs up mid-call. Each reply takes about
+2–6 seconds. After each call a row appears in `data/calls.csv` (see below). Requests for help land in
 `data/help-requests.jsonl`. Full call records: `openclaw voicecall tail`.
+
+## Call results table
+
+Every finished call becomes one row in **`data/calls.csv`**. CSV opens in Excel and Google Sheets and
+imports into any database. [scripts/call-log.py](scripts/call-log.py) starts and stops together with the
+Gateway (`start-gateway.sh`). When a call ends, it sends the transcript to an OpenAI model (`gpt-5.6-luna`;
+change it with `CALL_LOG_MODEL` in `.env`), which fills in the answers. The transcript itself is not stored
+in the table.
+
+| Column | Meaning | Values |
+|---|---|---|
+| `call_id` | OpenClaw call ID | |
+| `phone` | number called | `+4915…` |
+| `started_at` | call start, UTC | `2026-10-09T11:20:16Z` |
+| `duration_sec` | from answer to hang-up | `27` |
+| `end_reason` | who ended the call (from the phone line) | `hangup-bot`, `hangup-user`, `timeout`, … |
+| `outcome` | how the call went | `completed`, `busy_callback`, `other_bank`, `upset`, `voicemail`, `no_answer`, `cut_off` |
+| `stop_reason` | Q1, why they didn't finish, in their words | `I wasn't sure about the fees` |
+| `stop_category` | Q1, grouped for reports | `documents`, `verification`, `fees`, `other_bank`, `no_time`, `other` |
+| `wants_help` | Q2 | `yes`, `no` |
+| `help_type` | what they picked | `link`, `guide`, `human_support` |
+| `help_sent` | `send_help` was actually called (from the stub's log, not from the model) | `yes`, `no` |
+| `still_planning` | Q3 | `yes`, `no`, `unsure` |
+| `planned_when` | Q3, when, in their words | `next week` |
+| `callback_at` | if busy: when to call back | `Tomorrow after 5 pm` |
+| `other_bank_reason` | why they chose another bank | `lower monthly fees` |
+| `do_not_call` | asked not to be called again | `yes`, `no` |
+
+Empty cell = not discussed. To rebuild the whole table from past calls, for example after changing the
+columns, run `python3 scripts/call-log.py --rebuild`. The old file is kept as `calls.csv.bak`.
+
 
 ## Future steps: enable live calls (Twilio)
 
@@ -193,11 +225,12 @@ To go back to mock: `./scripts/apply-config.sh`, then restart the Gateway.
   and this hasn't been tested.
 - **Turn-by-turn, not realtime.** Each reply takes a few seconds. OpenClaw's realtime voice mode
   (speech-to-speech, faster) works only with Twilio and is not set up.
-- **Answers are not collected into a table yet.** They're only in the call transcripts
-  (`openclaw voicecall tail`). Next step: a per-call row in `data/calls.csv` (reason, wants help, help type,
-  plans, call-back time, do-not-call, outcome) for import into a database.
-- **"Don't call me again" is not stored anywhere yet.** Noah asks and acknowledges it, but nothing keeps that
-  number from being called again.
+- **The results table is filled by a model.** The answers in `data/calls.csv` are extracted from the
+  transcript and can occasionally be wrong. The `end_reason` and `help_sent` columns come straight from the
+  system. Every call costs one extra model request. The table is written only while the Gateway (and with it
+  `call-log.py`) is running, but calls missed in between are picked up on the next start.
+- **"Don't call me again" is only recorded.** It ends up in `do_not_call`, but nothing stops that number
+  from being called again. Whatever starts the calls has to check the table.
 - **Calls cut off midway are not resumed.** Each call starts fresh. This is on purpose for now: first we
   measure how often calls drop.
 - **One call at a time** (the plugin default), and **one fixed greeting** with no customer name.
@@ -228,7 +261,7 @@ To go back to mock: `./scripts/apply-config.sh`, then restart the Gateway.
 config/            OpenClaw settings (no secrets): gateway, agent, mock and Twilio lines
 prompts/           Noah's instructions and greeting
 plugins/vivid-tools/  send_help (stub) and end_call tools
-scripts/           apply-config.sh, start-gateway.sh, mock-call.py
-data/              call output (help requests). Ignored by git: contains personal data
+scripts/           apply-config.sh, start-gateway.sh, mock-call.py, call-log.py
+data/              call results (calls.csv) and help requests. Ignored by git: contains personal data
 .env.example       which keys are needed. Copy to .env
 ```

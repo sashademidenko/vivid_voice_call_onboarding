@@ -18,4 +18,9 @@ set -a
 . ./.env
 set +a
 
-exec openclaw gateway run "$@"
+# Per-call results table (data/calls.csv), stopped together with the Gateway.
+python3 scripts/call-log.py &
+CALL_LOG_PID=$!
+trap 'kill "$CALL_LOG_PID" 2>/dev/null || true' EXIT
+
+openclaw gateway run "$@"

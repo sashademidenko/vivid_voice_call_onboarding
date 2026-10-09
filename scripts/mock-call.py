@@ -6,7 +6,8 @@ Usage (Gateway must be running, see scripts/start-gateway.sh):
     python3 scripts/mock-call.py --to +15550001234     # specific fake number
     python3 scripts/mock-call.py --greeting "Custom first line"   (default: prompts/greeting.txt)
 
-Type /end (or press Enter on an empty line) to hang up.
+Type /end (or press Enter on an empty line) to hang up as the agent's side,
+or /hangup to play a customer who hangs up mid-call.
 """
 import argparse
 import glob
@@ -113,20 +114,26 @@ def main():
 
     out = openclaw("voicecall", "call", "--to", to, "--message", greeting)
     call_id = json.loads(out)["callId"]
-    print(f"Test call to {to} started. Type /end to hang up.", flush=True)
+    print(f"Test call to {to} started. /end = hang up, /hangup = customer hangs up.", flush=True)
 
     watcher = TranscriptWatcher(call_id)
     send_event(call_id, "call.answered")
     shown = watcher.wait_for_agent(0)
 
+    said = ""
     try:
         while not watcher.ended:
             said = input("\n👤 Customer: ").strip()
             if not said or said == "/end":
                 break
+            if said == "/hangup":
+                send_event(call_id, "call.ended", reason="hangup-user")
+                watcher.ended = True
+                print("\n(the customer hung up)", flush=True)
+                break
             send_event(call_id, "call.speech", transcript=said, isFinal=True)
             shown = watcher.wait_for_agent(shown + 1)
-        if watcher.ended:
+        if watcher.ended and said != "/hangup":
             print("\n(the agent hung up)", flush=True)
     except (KeyboardInterrupt, EOFError):
         pass
