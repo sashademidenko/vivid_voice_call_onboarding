@@ -28,6 +28,10 @@
           // Which OpenClaw agent answers on calls (see config/agent-noah.json5).
           agentId: "noah",
 
+          // AI model for Noah's replies on calls. Without this, OpenClaw's global default (gpt-6-astra) is used.
+          // Keep the same value in voice-call.mock.json5 and voice-call.twilio.json5.
+          responseModel: "openai/gpt-5.6-terra",
+
           // Noah's instructions (responseSystemPrompt) are loaded from prompts/noah.md
           // by scripts/apply-config.sh, so the prompt lives in one readable file.
         },

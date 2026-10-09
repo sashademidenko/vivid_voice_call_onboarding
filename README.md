@@ -64,9 +64,16 @@ a reply, and the line speaks it.
 | The first sentence of the call | [prompts/greeting.txt](prompts/greeting.txt) |
 | Call settings: mock line | [config/voice-call.mock.json5](config/voice-call.mock.json5) |
 | Call settings: Twilio line | [config/voice-call.twilio.json5](config/voice-call.twilio.json5) |
+| AI model for Noah's replies (now `openai/gpt-5.6-terra`) | `responseModel` in [config/voice-call.mock.json5](config/voice-call.mock.json5) **and** [config/voice-call.twilio.json5](config/voice-call.twilio.json5) (keep them the same) |
+| AI model that fills the results table (now `gpt-5.6-luna`) | `CALL_LOG_MODEL` in `.env` |
 | Agent permissions (tools, memory) | [config/agent-noah.json5](config/agent-noah.json5) |
 | What `send_help` / `end_call` do | [plugins/vivid-tools/index.ts](plugins/vivid-tools/index.ts) |
 | Keys (OpenAI, Twilio, ngrok) | `.env` (copy from [.env.example](.env.example); never committed) |
+
+About the model: without `responseModel`, the voice-call plugin uses OpenClaw's global default model
+(here the more expensive `gpt-6-astra`), not the agent's own model. That's why the model is set in the
+voice-call config. Model IDs available to your key: `openclaw models list --all --provider openai`
+(with the Gateway running).
 
 After changing anything except `.env`, run `./scripts/apply-config.sh` (add `twilio` in Twilio mode) and
 **restart the Gateway**. After changing only `.env`, just restart the Gateway.
@@ -233,6 +240,9 @@ To go back to mock: `./scripts/apply-config.sh`, then restart the Gateway.
   from being called again. Whatever starts the calls has to check the table.
 - **Calls cut off midway are not resumed.** Each call starts fresh. This is on purpose for now: first we
   measure how often calls drop.
+- **The cheaper model is not tested yet.** All test calls were made with `gpt-6-astra`. After the switch
+  to `gpt-5.6-terra`, no test call has been placed, so how well it follows the prompt has to be checked
+  with `python3 scripts/mock-call.py`.
 - **One call at a time** (the plugin default), and **one fixed greeting** with no customer name.
 - **Restart the Gateway after any config or plugin change.** OpenClaw tries to apply changes "live", but
   for the voice-call plugin this leaves the Gateway refusing new work ("Gateway is draining"), and the agent
