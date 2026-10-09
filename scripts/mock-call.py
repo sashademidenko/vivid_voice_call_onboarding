@@ -14,6 +14,7 @@ import json
 import os
 import random
 import shutil
+import signal
 import subprocess
 import sys
 import threading
@@ -61,6 +62,7 @@ class TranscriptWatcher:
         self.proc = subprocess.Popen(
             [openclaw_bin(), "voicecall", "tail", "--since", "50", "--poll", "250"],
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            start_new_session=True,  # own process group, so stop() also ends openclaw's child process
         )
         threading.Thread(target=self._follow, daemon=True).start()
 
@@ -75,7 +77,10 @@ class TranscriptWatcher:
                 self.ended = self.ended or record.get("state") in ENDED_STATES
 
     def stop(self):
-        self.proc.kill()
+        try:
+            os.killpg(self.proc.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
 
     def wait_for_agent(self, shown):
         """Wait until the agent's reply appears after line number `shown`, print it, return new line count."""

@@ -5,8 +5,9 @@ An outbound AI voice agent, **Noah**, built on [OpenClaw](https://docs.openclaw.
 Vivid Business account but didn't finish. He finds out why they stopped, offers help and collects their answers.
 
 **Status:** the agent works end to end in **mock mode** (a simulated phone line, no real calls).
-Live calls through **Twilio** are configured, with keys read from `.env`, but haven't been tested on a real
-line yet. See [Limitations](#limitations).
+Live phone calls are not part of this version. The Twilio settings are ready, with keys read from `.env`,
+and the steps to switch them on later are in
+[Future steps: enable live calls](#future-steps-enable-live-calls-twilio). See also [Limitations](#limitations).
 
 ---
 
@@ -128,7 +129,10 @@ python3 scripts/mock-call.py
 Type `/end` to hang up. Each reply takes about 2–6 seconds. Requests for help land in
 `data/help-requests.jsonl`. Full call records: `openclaw voicecall tail`.
 
-## Enable live calls (Twilio)
+## Future steps: enable live calls (Twilio)
+
+Not part of this version: no Twilio account or ngrok is set up. The project is prepared so that switching
+on live calls later takes only the steps below, with no code changes.
 
 You need:
 1. **A Twilio account and a phone number with Voice.** A US number is issued instantly. Numbers in many other
@@ -170,16 +174,16 @@ openclaw voicecall call --to "+<your number>" --message "$(cat prompts/greeting.
 No keys go into the config files. [config/voice-call.twilio.json5](config/voice-call.twilio.json5) leaves the
 Twilio fields empty, and the voice-call plugin reads `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
 `TWILIO_FROM_NUMBER` and `NGROK_AUTHTOKEN` from the environment. `start-gateway.sh` loads them from `.env`.
-Using fake values, I confirmed that `openclaw voicecall setup` reports the Twilio configuration as complete
-when these variables are set.
+This was checked with fake values: with these variables set, `openclaw voicecall setup` reports the
+Twilio configuration as complete.
 
 To go back to mock: `./scripts/apply-config.sh`, then restart the Gateway.
 
 ## Limitations
 
-- **Twilio is not tested on a real line.** The config is checked against OpenClaw's schema, and the
-  environment-key pickup was verified with fake keys. No real call has been placed yet. Speech recognition
-  accuracy, voice quality, latency and interruptions over the phone are unknown.
+- **No live calls in this version.** The Twilio config is checked against OpenClaw's schema, and the
+  environment-key pickup was verified with fake keys, but no real call has been placed. Speech recognition
+  accuracy, voice quality, latency and interruptions over the phone are unknown until then.
 - **`send_help` is a stub.** It doesn't send anything to the Vivid app. It appends the request (link or
   guide, plus the stuck step) to `data/help-requests.jsonl`. It records the OpenClaw call/session ID, not a
   Vivid customer ID. A real integration needs the Vivid app chat API and a way to pass the customer ID into
