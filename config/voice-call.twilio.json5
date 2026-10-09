@@ -1,0 +1,38 @@
+// Voice Call plugin settings for real phone calls via Twilio.
+// Apply with:  ./scripts/apply-config.sh twilio   (then restart the Gateway)
+//
+// No secrets here on purpose. The plugin reads them from environment variables, which
+// scripts/start-gateway.sh loads from .env:
+//   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER, NGROK_AUTHTOKEN
+{
+  plugins: {
+    entries: {
+      "voice-call": {
+        enabled: true,
+        config: {
+          provider: "twilio",
+
+          // null = remove the fake mock numbers, so the real number comes from TWILIO_FROM_NUMBER.
+          fromNumber: null,
+          toNumber: null,
+
+          // Same call behaviour as in mock mode.
+          sessionScope: "per-call",
+          outbound: {
+            defaultMode: "conversation",
+          },
+          agentId: "noah",
+
+          // Twilio has to reach this computer over the internet: ngrok opens a temporary public
+          // HTTPS address and forwards it to the local webhook (http://127.0.0.1:3334/voice/webhook).
+          tunnel: {
+            provider: "ngrok",
+            // Needed on ngrok's free plan to rebuild the public URL for Twilio's signature check.
+            // It does not switch the signature check off.
+            allowNgrokFreeTierLoopbackBypass: true,
+          },
+        },
+      },
+    },
+  },
+}

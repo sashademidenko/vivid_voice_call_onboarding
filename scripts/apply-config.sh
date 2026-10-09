@@ -18,6 +18,22 @@ if [ ! -f "$PROVIDER_CONFIG" ]; then
   exit 1
 fi
 
+# Twilio mode: check the keys in .env and the ngrok program before switching (values are never printed).
+if [ "$MODE" = "twilio" ]; then
+  missing=""
+  for key in TWILIO_ACCOUNT_SID TWILIO_AUTH_TOKEN TWILIO_FROM_NUMBER NGROK_AUTHTOKEN OPENAI_API_KEY; do
+    grep -qE "^$key=.+" .env 2>/dev/null || missing="$missing $key"
+  done
+  if [ -n "$missing" ]; then
+    echo "Fill these in .env first:$missing" >&2
+    exit 1
+  fi
+  if ! command -v ngrok >/dev/null; then
+    echo "ngrok is not installed (see README, 'Enable live calls')." >&2
+    exit 1
+  fi
+fi
+
 echo "1/5 Gateway settings"
 openclaw config patch --file config/gateway.json5
 

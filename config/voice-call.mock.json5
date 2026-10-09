@@ -1,5 +1,5 @@
 // Voice Call plugin settings for local testing — no real phone calls.
-// Apply with:  openclaw config patch --file config/voice-call.mock.json5
+// Apply with:  ./scripts/apply-config.sh   (mock is the default; then restart the Gateway)
 {
   plugins: {
     entries: {
@@ -12,6 +12,9 @@
           // Fake numbers: mock never dials them.
           fromNumber: "+15550000001",
           toNumber: "+15550000002",
+
+          // No public tunnel needed in mock mode (null = remove it if Twilio mode set one).
+          tunnel: null,
 
           // Every call starts with a clean memory (no carry-over between calls).
           // Resuming cut-off calls is postponed until we see how often calls drop (outcome=cut_off in data/calls.csv).

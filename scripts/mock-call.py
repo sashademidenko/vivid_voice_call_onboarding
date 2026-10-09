@@ -85,12 +85,12 @@ class TranscriptWatcher:
             if len(lines) > shown and lines[-1].get("speaker") == "bot":
                 for item in lines[shown:]:
                     if item.get("speaker") == "bot":
-                        print(f"\n🤖 Агент: {item.get('text', '')}", flush=True)
+                        print(f"\n🤖 Agent: {item.get('text', '')}", flush=True)
                 return len(lines)
             if self.ended:
                 return len(lines)
             time.sleep(0.3)
-        print("\n(агент не ответил за отведённое время — проверьте окно Gateway)", flush=True)
+        print("\n(no reply from the agent in time — check the Gateway window)", flush=True)
         return len(self.lines)
 
 
@@ -108,7 +108,7 @@ def main():
 
     out = openclaw("voicecall", "call", "--to", to, "--message", greeting)
     call_id = json.loads(out)["callId"]
-    print(f"Тестовый звонок на {to} начат. /end — положить трубку.", flush=True)
+    print(f"Test call to {to} started. Type /end to hang up.", flush=True)
 
     watcher = TranscriptWatcher(call_id)
     send_event(call_id, "call.answered")
@@ -116,20 +116,20 @@ def main():
 
     try:
         while not watcher.ended:
-            said = input("\n👤 Клиент: ").strip()
+            said = input("\n👤 Customer: ").strip()
             if not said or said == "/end":
                 break
             send_event(call_id, "call.speech", transcript=said, isFinal=True)
             shown = watcher.wait_for_agent(shown + 1)
         if watcher.ended:
-            print("\n(агент положил трубку)", flush=True)
+            print("\n(the agent hung up)", flush=True)
     except (KeyboardInterrupt, EOFError):
         pass
     finally:
         watcher.stop()
         if not watcher.ended:
             openclaw("voicecall", "end", "--call-id", call_id)
-        print("\nЗвонок завершён.")
+        print("\nCall ended.")
 
 
 if __name__ == "__main__":
