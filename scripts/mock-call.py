@@ -5,6 +5,7 @@ Usage (Gateway must be running, see scripts/start-gateway.sh):
     python3 scripts/mock-call.py                       # random fake customer number
     python3 scripts/mock-call.py --to +15550001234     # specific fake number
     python3 scripts/mock-call.py --greeting "Custom first line"   (default: prompts/greeting.txt)
+    python3 scripts/mock-call.py --voice               # also speak Noah's lines out loud (macOS `say`, free, offline)
 
 Type /end (or press Enter on an empty line) to hang up as the agent's side,
 or /hangup to play a customer who hangs up mid-call.
@@ -25,6 +26,8 @@ import urllib.request
 WEBHOOK_URL = "http://127.0.0.1:3334/voice/webhook"
 GREETING_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "prompts", "greeting.txt")
 REPLY_TIMEOUT_S = 90
+SPEAK_VOICE = "Daniel"  # macOS British English voice; falls back to the system voice if missing
+speak_enabled = False
 ENDED_STATES = {"completed", "ended", "hangup-bot", "hangup-user", "failed", "timeout"}
 
 
@@ -45,6 +48,14 @@ def openclaw(*args):
     if result.returncode != 0:
         sys.exit(f"openclaw {' '.join(args)} failed:\n{result.stderr or result.stdout}")
     return result.stdout
+
+
+def speak(text):
+    """Read the agent's line out loud and wait until it's finished (macOS only)."""
+    if not speak_enabled or not text or not shutil.which("say"):
+        return
+    if subprocess.run(["say", "-v", SPEAK_VOICE, text], stderr=subprocess.DEVNULL).returncode != 0:
+        subprocess.run(["say", text])
 
 
 def send_event(call_id, event_type, **fields):
@@ -92,6 +103,7 @@ class TranscriptWatcher:
                 for item in lines[shown:]:
                     if item.get("speaker") == "bot":
                         print(f"\n🤖 Agent: {item.get('text', '')}", flush=True)
+                        speak(item.get("text", ""))
                 return len(lines)
             if self.ended:
                 return len(lines)
@@ -104,7 +116,10 @@ def main():
     parser = argparse.ArgumentParser(description="Test call in mock mode.")
     parser.add_argument("--to", help="fake customer number (default: random)")
     parser.add_argument("--greeting", help="agent's first line (default: prompts/greeting.txt)")
+    parser.add_argument("--voice", action="store_true", help="speak Noah's lines out loud (macOS)")
     args = parser.parse_args()
+    global speak_enabled
+    speak_enabled = args.voice
 
     to = args.to or f"+1555{random.randint(0, 9999999):07d}"
     greeting = args.greeting

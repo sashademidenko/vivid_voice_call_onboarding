@@ -133,7 +133,9 @@ python3 scripts/mock-call.py
 …
 ```
 
-Type `/end` to hang up, or `/hangup` to play a customer who hangs up mid-call. Each reply takes about
+Add `--voice` to hear Noah's lines read out loud by macOS's built-in speech (free, offline, voice "Daniel";
+it's not the voice a real phone call would use). Type `/end` to hang up, or `/hangup` to play a customer
+who hangs up mid-call. Each reply takes about
 2–6 seconds. After each call a row appears in `data/calls.csv` (see below). Requests for help land in
 `data/help-requests.jsonl`. Full call records: `openclaw voicecall tail`.
 
@@ -251,7 +253,8 @@ To go back to mock: `./scripts/apply-config.sh`, then restart the Gateway.
 - **Workaround for hanging up.** The voice-call plugin's own `voice_call` tool can't be used from inside the
   call agent: it starts a second voice-call runtime and breaks the live call. So `end_call` starts a small
   background helper ([hangup-when-quiet.mjs](plugins/vivid-tools/hangup-when-quiet.mjs)). The helper waits
-  until the goodbye is spoken and hangs up through the `openclaw voicecall` CLI. If no goodbye appears, it
+  until the goodbye appears in the call record and the live call state shows it has finished playing, then
+  hangs up through the `openclaw voicecall` CLI. If no goodbye appears, it
   hangs up after 45 seconds.
 - **No calling-hours or consent checks.** The agent doesn't check local time, consent or do-not-call lists
   before dialing. That is up to whatever starts the calls.
