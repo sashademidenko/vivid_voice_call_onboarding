@@ -240,9 +240,10 @@ To go back to mock: `./scripts/apply-config.sh`, then restart the Gateway.
   from being called again. Whatever starts the calls has to check the table.
 - **Calls cut off midway are not resumed.** Each call starts fresh. This is on purpose for now: first we
   measure how often calls drop.
-- **The cheaper model is not tested yet.** All test calls were made with `gpt-6-astra`. After the switch
-  to `gpt-5.6-terra`, no test call has been placed, so how well it follows the prompt has to be checked
-  with `python3 scripts/mock-call.py`.
+- **The cheaper model is only lightly tested.** The edge cases (busy, other bank, upset, "are you a real
+  person?", fee questions, card details) were tested with `gpt-6-astra`. On `gpt-5.6-terra` only the main
+  scenario has been run (stuck on documents → guide via `send_help` → plans → goodbye and hang-up), and it
+  passed.
 - **One call at a time** (the plugin default), and **one fixed greeting** with no customer name.
 - **Restart the Gateway after any config or plugin change.** OpenClaw tries to apply changes "live", but
   for the voice-call plugin this leaves the Gateway refusing new work ("Gateway is draining"), and the agent
