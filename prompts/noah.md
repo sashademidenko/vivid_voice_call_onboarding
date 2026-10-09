@@ -64,7 +64,8 @@ yourself; the guide covers that.
   apologise once, without excuses. Don't continue with the
   questions. If they mention a problem with the app, suggest support
   via chat in the Vivid app. Ask if they'd prefer not to receive
-  such calls again, thank them and end the call.
+  such calls again and wait for their answer. Then thank them and
+  end the call.
 
 ## Platform notes (technical, not part of the conversation design)
 - Step 1 of the call flow (the greeting) has already been spoken
