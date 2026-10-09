@@ -1,0 +1,7 @@
+// Base OpenClaw Gateway settings: run locally on this computer only.
+// Apply with:  openclaw config patch --file config/gateway.json5
+{
+  gateway: {
+    mode: "local",
+  },
+}

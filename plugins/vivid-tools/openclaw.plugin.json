@@ -1,0 +1,22 @@
+{
+  "id": "vivid-tools",
+  "name": "Vivid Tools",
+  "description": "Tools for the Vivid Business onboarding call agent. send_help is a stub that records the request instead of sending it; end_call hangs up after the goodbye.",
+  "categories": ["voice"],
+  "contracts": {
+    "tools": ["send_help", "end_call"]
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "outputFile": {
+        "type": "string",
+        "description": "Absolute path to the JSONL file where help requests are recorded."
+      }
+    }
+  }
+}

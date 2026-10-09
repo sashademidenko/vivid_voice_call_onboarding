@@ -1,0 +1,29 @@
+// The "noah" agent that answers on calls. Create it once with:
+//   openclaw agents add noah --workspace ~/.openclaw/workspace-noah --non-interactive
+// then apply with:  openclaw config patch --file config/agent-noah.json5
+{
+  agents: {
+    entries: {
+      noah: {
+        name: "Noah",
+        identity: { name: "Noah" },
+
+        // Don't mix in OpenClaw's generic workspace persona files (AGENTS.md, SOUL.md, BOOTSTRAP.md...).
+        // Noah's instructions come only from prompts/noah.md (responseSystemPrompt).
+        contextInjection: "never",
+        skills: [],
+
+        // Only what the call needs, both from plugins/vivid-tools: send help and hang up.
+        // (Not the built-in voice_call tool: used from inside a call it breaks the live call.)
+        tools: {
+          allow: ["send_help", "end_call"],
+        },
+
+        // No search across other conversations: each call stands on its own.
+        memory: {
+          search: { enabled: false },
+        },
+      },
+    },
+  },
+}

@@ -1,0 +1,34 @@
+// Voice Call plugin settings for local testing — no real phone calls.
+// Apply with:  openclaw config patch --file config/voice-call.mock.json5
+{
+  plugins: {
+    entries: {
+      "voice-call": {
+        enabled: true,
+        config: {
+          // "mock" = pretend phone line, nothing leaves your computer.
+          provider: "mock",
+
+          // Fake numbers: mock never dials them.
+          fromNumber: "+15550000001",
+          toNumber: "+15550000002",
+
+          // Every call starts with a clean memory (no carry-over between calls).
+          // Resuming cut-off calls is postponed until we see how often calls drop (outcome=cut_off in data/calls.csv).
+          sessionScope: "per-call",
+
+          // "conversation" = two-way dialogue, not a one-off announcement.
+          outbound: {
+            defaultMode: "conversation",
+          },
+
+          // Which OpenClaw agent answers on calls (see config/agent-noah.json5).
+          agentId: "noah",
+
+          // Noah's instructions (responseSystemPrompt) are loaded from prompts/noah.md
+          // by scripts/apply-config.sh, so the prompt lives in one readable file.
+        },
+      },
+    },
+  },
+}

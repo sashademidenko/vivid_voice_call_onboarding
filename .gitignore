@@ -11,3 +11,6 @@
 # Node / logs
 node_modules/
 *.log
+
+# Call results and help requests (real people's data) — never commit
+data/
